@@ -25,36 +25,28 @@ const client = new Client({
 });
 
 // ================== VOICE SYSTEM ==================
-async function joinVC() {
-  try {
-    const channel = await client.channels.fetch(VOICE_CHANNEL_ID);
-    if (!channel) return;
+function joinVC() {
+  const channel = client.channels.cache.get(VOICE_CHANNEL_ID);
+  if (!channel) return;
 
-    const existing = getVoiceConnection(GUILD_ID);
-    if (existing) existing.destroy();
+  const existing = getVoiceConnection(GUILD_ID);
+  if (existing) existing.destroy();
 
-    const connection = joinVoiceChannel({
-      channelId: VOICE_CHANNEL_ID,
-      guildId: GUILD_ID,
-      adapterCreator: channel.guild.voiceAdapterCreator,
-      selfDeaf: true,
-      selfMute: true
-    });
+  const connection = joinVoiceChannel({
+    channelId: VOICE_CHANNEL_ID,
+    guildId: GUILD_ID,
+    adapterCreator: channel.guild.voiceAdapterCreator
+  });
 
-    console.log("🎧 دخل الروم الصوتي");
+  console.log("🎧 دخل الروم الصوتي");
 
-    connection.on(VoiceConnectionStatus.Disconnected, () => {
-      console.log("🔁 انقطع الاتصال، إعادة دخول...");
-      setTimeout(joinVC, 3000);
-    });
-
-  } catch (err) {
-    console.log("❌ خطأ دخول الروم:", err);
-    setTimeout(joinVC, 5000);
-  }
+  connection.on(VoiceConnectionStatus.Disconnected, () => {
+    console.log("🔁 انقطع الاتصال، إعادة دخول...");
+    setTimeout(joinVC, 3000);
+  });
 }
 
-// ================== SLASH COMMANDS ==================
+// ================== SLASH COMMAND ==================
 const commands = [
   new SlashCommandBuilder()
     .setName('dm')
@@ -109,7 +101,7 @@ client.once('ready', () => {
 
   joinVC();
 
-  // حماية: إذا طلع يرجع
+  // حماية: يرجع يدخل إذا طلع
   setInterval(() => {
     const channel = client.channels.cache.get(VOICE_CHANNEL_ID);
     if (!channel) return;
